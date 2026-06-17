@@ -16,16 +16,38 @@ String getNamaIkon(IconData ikon) {
 }
 
 class KategoriScreen extends StatefulWidget {
-  const KategoriScreen({super.key});
+  /// Dipanggil setiap kali tab berubah, mengirimkan tipe aktif ("Pengeluaran" / "Pemasukan")
+  final void Function(String tipe)? onTabChanged;
+
+  const KategoriScreen({super.key, this.onTabChanged});
 
   @override
   _KategoriScreenState createState() => _KategoriScreenState();
 }
 
-class _KategoriScreenState extends State<KategoriScreen> {
-  final TextEditingController _kategoriController = TextEditingController();
-  String _tipeKategoriBaru = "Pengeluaran";
-  IconData _ikonTerpilih = daftarPilihanIkon.first; // Default logo pertama
+class _KategoriScreenState extends State<KategoriScreen>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tabController;
+
+  static const _tabs = ["Pengeluaran", "Pemasukan"];
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: _tabs.length, vsync: this);
+    _tabController.addListener(() {
+      // Hanya trigger saat animasi selesai (bukan saat animasi berjalan)
+      if (!_tabController.indexIsChanging) {
+        widget.onTabChanged?.call(_tabs[_tabController.index]);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
 
   void _editKategori(KategoriModel item) {
     showDialog(
@@ -39,7 +61,13 @@ class _KategoriScreenState extends State<KategoriScreen> {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
-              title: Text("Edit Kategori"),
+              title: const Row(
+                children: [
+                  Icon(Icons.edit, color: Colors.blue),
+                  SizedBox(width: 8),
+                  Text("Edit Kategori"),
+                ],
+              ),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -47,40 +75,32 @@ class _KategoriScreenState extends State<KategoriScreen> {
                   children: [
                     TextField(
                       controller: namaEditController,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         labelText: "Nama Kategori",
                         border: OutlineInputBorder(),
                       ),
                     ),
-                    SizedBox(height: 10),
-                    Row(
-                      children: [
-                        Text(
-                          "Tipe: ",
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        SizedBox(width: 10),
-                        DropdownButton<String>(
-                          value: editTipe,
-                          items: ["Pengeluaran", "Pemasukan"].map((String val) {
-                            return DropdownMenuItem<String>(
-                                value: val, child: Text(val));
-                          }).toList(),
-                          onChanged: (val) {
-                            setDialogState(() {
-                              editTipe = val!;
-                            });
-                          },
-                        ),
-                      ],
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<String>(
+                      initialValue: editTipe,
+                      decoration: const InputDecoration(
+                        labelText: "Tipe",
+                        border: OutlineInputBorder(),
+                      ),
+                      items: _tabs
+                          .map((t) => DropdownMenuItem(value: t, child: Text(t)))
+                          .toList(),
+                      onChanged: (val) =>
+                          setDialogState(() => editTipe = val!),
                     ),
-                    const SizedBox(height: 15),
+                    const SizedBox(height: 12),
                     DropdownButtonFormField<IconData>(
                       initialValue: editIkon,
                       decoration: const InputDecoration(
                         labelText: "Pilih Logo Kategori",
                         border: OutlineInputBorder(),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        contentPadding:
+                            EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       ),
                       items: daftarPilihanIkon.map((IconData ikon) {
                         return DropdownMenuItem<IconData>(
@@ -94,11 +114,8 @@ class _KategoriScreenState extends State<KategoriScreen> {
                           ),
                         );
                       }).toList(),
-                      onChanged: (IconData? val) {
-                        setDialogState(() {
-                          editIkon = val!;
-                        });
-                      },
+                      onChanged: (val) =>
+                          setDialogState(() => editIkon = val!),
                     ),
                   ],
                 ),
@@ -106,7 +123,7 @@ class _KategoriScreenState extends State<KategoriScreen> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: Text("Batal"),
+                  child: const Text("Batal"),
                 ),
                 ElevatedButton(
                   onPressed: () {
@@ -119,7 +136,6 @@ class _KategoriScreenState extends State<KategoriScreen> {
                         item.nama = newNama;
                         item.tipe = editTipe;
                         item.ikon = editIkon;
-
                         // Update transaksi yang memakai kategori ini
                         for (var t in daftarTransaksi) {
                           if (t.kategori == oldNama && t.tipe == oldTipe) {
@@ -136,7 +152,7 @@ class _KategoriScreenState extends State<KategoriScreen> {
                     backgroundColor: Colors.green,
                     foregroundColor: Colors.white,
                   ),
-                  child: Text("Simpan"),
+                  child: const Text("Simpan"),
                 ),
               ],
             );
@@ -147,17 +163,19 @@ class _KategoriScreenState extends State<KategoriScreen> {
   }
 
   void _hapusKategori(KategoriModel item) {
-    int countTipe = masterKategori.where((k) => k.tipe == item.tipe).length;
+    int countTipe =
+        masterKategori.where((k) => k.tipe == item.tipe).length;
     if (countTipe <= 1) {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: Text("Tidak Dapat Menghapus"),
-          content: Text("Minimal harus ada 1 kategori untuk tipe ${item.tipe}."),
+          title: const Text("Tidak Dapat Menghapus"),
+          content: Text(
+              "Minimal harus ada 1 kategori untuk tipe ${item.tipe}."),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text("OK"),
+              child: const Text("OK"),
             ),
           ],
         ),
@@ -167,30 +185,92 @@ class _KategoriScreenState extends State<KategoriScreen> {
 
     showDialog(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text("Hapus Kategori"),
-          content: Text("Apakah Anda yakin ingin menghapus kategori '${item.nama}'?"),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text("Batal"),
+      builder: (context) => AlertDialog(
+        title: const Text("Hapus Kategori"),
+        content: Text(
+            "Apakah Anda yakin ingin menghapus kategori '${item.nama}'?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Batal"),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              setState(() => masterKategori.remove(item));
+              saveData();
+              Navigator.pop(context);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
             ),
-            ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  masterKategori.remove(item);
-                });
-                saveData();
-                Navigator.pop(context);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                foregroundColor: Colors.white,
-              ),
-              child: Text("Hapus"),
+            child: const Text("Hapus"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Membangun daftar kategori untuk satu tipe tertentu
+  Widget _buildList(String tipe) {
+    final list = masterKategori.where((k) => k.tipe == tipe).toList();
+    final isPengeluaran = tipe == "Pengeluaran";
+    final accentColor = isPengeluaran ? Colors.redAccent : Colors.greenAccent;
+    final bgColor = isPengeluaran ? Colors.red.shade900 : Colors.green.shade900;
+
+    if (list.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.category_outlined, size: 64, color: Colors.grey[500]),
+            const SizedBox(height: 10),
+            Text(
+              "Belum ada kategori $tipe.\nTekan tombol \"+\" untuk menambah.",
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.grey),
             ),
           ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      itemCount: list.length,
+      itemBuilder: (context, index) {
+        final item = list[index];
+        return Card(
+          margin: const EdgeInsets.symmetric(vertical: 5),
+          child: ListTile(
+            leading: CircleAvatar(
+              backgroundColor: bgColor,
+              child: Icon(item.ikon, color: Colors.white),
+            ),
+            title: Text(item.nama,
+                style: const TextStyle(fontWeight: FontWeight.w600)),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.edit, color: Colors.blue, size: 20),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  onPressed: () => _editKategori(item),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: Icon(accentColor == Colors.redAccent
+                      ? Icons.delete
+                      : Icons.delete,
+                      color: Colors.red, size: 20),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  onPressed: () => _hapusKategori(item),
+                ),
+              ],
+            ),
+          ),
         );
       },
     );
@@ -198,161 +278,55 @@ class _KategoriScreenState extends State<KategoriScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // 1. INPUT NAMA KATEGORI
-          TextField(
-            controller: _kategoriController,
-            decoration: InputDecoration(
-              labelText: "Nama Kategori Baru",
-              border: OutlineInputBorder(),
+    return Column(
+      children: [
+        // ===== TAB BAR =====
+        TabBar(
+          controller: _tabController,
+          labelStyle: const TextStyle(fontWeight: FontWeight.bold),
+          indicatorColor: Colors.green,
+          labelColor: Colors.green,
+          unselectedLabelColor: Colors.grey,
+          tabs: [
+            Tab(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.arrow_downward, size: 16),
+                  const SizedBox(width: 6),
+                  Text(
+                    "Pengeluaran (${masterKategori.where((k) => k.tipe == "Pengeluaran").length})",
+                  ),
+                ],
+              ),
             ),
-          ),
-          SizedBox(height: 10),
+            Tab(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.arrow_upward, size: 16),
+                  const SizedBox(width: 6),
+                  Text(
+                    "Pemasukan (${masterKategori.where((k) => k.tipe == "Pemasukan").length})",
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const Divider(height: 1),
 
-          // 2. PILIHAN TIPE (PENGELUARAN / PEMASUKAN)
-          Row(
+        // ===== TAB VIEW =====
+        Expanded(
+          child: TabBarView(
+            controller: _tabController,
             children: [
-              Text(
-                "Tipe Kategori: ",
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              SizedBox(width: 10),
-              DropdownButton<String>(
-                value: _tipeKategoriBaru,
-                items: ["Pengeluaran", "Pemasukan"].map((String val) {
-                  return DropdownMenuItem<String>(value: val, child: Text(val));
-                }).toList(),
-                onChanged: (val) => setState(() => _tipeKategoriBaru = val!),
-              ),
+              _buildList("Pengeluaran"),
+              _buildList("Pemasukan"),
             ],
           ),
-          const SizedBox(height: 15),
-          // 3. PILIHAN LOGO / IKON (Dropdown)
-          DropdownButtonFormField<IconData>(
-            initialValue: _ikonTerpilih,
-            decoration: const InputDecoration(
-              labelText: "Pilih Logo Kategori",
-              border: OutlineInputBorder(),
-              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            ),
-            items: daftarPilihanIkon.map((IconData ikon) {
-              return DropdownMenuItem<IconData>(
-                value: ikon,
-                child: Row(
-                  children: [
-                    Icon(ikon, color: Colors.green),
-                    const SizedBox(width: 12),
-                    Text(getNamaIkon(ikon)),
-                  ],
-                ),
-              );
-            }).toList(),
-            onChanged: (IconData? val) {
-              setState(() {
-                _ikonTerpilih = val!;
-              });
-            },
-          ),
-          const SizedBox(height: 15),
-
-          // 4. TOMBOL SIMPAN
-          ElevatedButton(
-            onPressed: () {
-              if (_kategoriController.text.isNotEmpty) {
-                setState(() {
-                  masterKategori.add(
-                    KategoriModel(
-                      nama: _kategoriController.text,
-                      tipe: _tipeKategoriBaru,
-                      ikon: _ikonTerpilih,
-                    ),
-                  );
-                  saveData();
-                  _kategoriController.clear();
-                });
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
-            ),
-            child: Text("Simpan Kategori"),
-          ),
-          Divider(height: 30, color: Colors.grey),
-
-          // 5. DAFTAR SEMUA KATEGORI DALAM SATU LIST
-          Text(
-            "Daftar Kategori Saat Ini:",
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-          ),
-          SizedBox(height: 10),
-          Expanded(
-            child: ListView.builder(
-              itemCount: masterKategori.length,
-              itemBuilder: (context, index) {
-                final item = masterKategori[index];
-                bool isPengeluaran = item.tipe == "Pengeluaran";
-
-                return Card(
-                  child: ListTile(
-                    // Menampilkan Logo Ikon yang dipilih
-                    leading: CircleAvatar(
-                      backgroundColor: isPengeluaran
-                          ? Colors.red.shade900
-                          : Colors.green.shade900,
-                      child: Icon(item.ikon, color: Colors.white),
-                    ),
-                    title: Text(item.nama),
-                    // Label Pembeda Tipe & tombol Aksi di sebelah kanan
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: isPengeluaran
-                                ? Colors.red.withValues(alpha: 0.2)
-                                : Colors.green.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(5),
-                          ),
-                          child: Text(
-                            item.tipe,
-                            style: TextStyle(
-                              color: isPengeluaran
-                                  ? Colors.redAccent
-                                  : Colors.greenAccent,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        SizedBox(width: 8),
-                        IconButton(
-                          icon: Icon(Icons.edit, color: Colors.blue, size: 20),
-                          padding: EdgeInsets.zero,
-                          constraints: BoxConstraints(),
-                          onPressed: () => _editKategori(item),
-                        ),
-                        SizedBox(width: 8),
-                        IconButton(
-                          icon: Icon(Icons.delete, color: Colors.red, size: 20),
-                          padding: EdgeInsets.zero,
-                          constraints: BoxConstraints(),
-                          onPressed: () => _hapusKategori(item),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

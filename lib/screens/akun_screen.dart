@@ -9,8 +9,6 @@ class AkunScreen extends StatefulWidget {
 }
 
 class _AkunScreenState extends State<AkunScreen> {
-  final TextEditingController _akunController = TextEditingController();
-
   void _editAkun(int index) {
     final String oldNama = masterAkun[index];
     final TextEditingController editController = TextEditingController(text: oldNama);
@@ -124,58 +122,56 @@ class _AkunScreenState extends State<AkunScreen> {
       padding: const EdgeInsets.all(16.0),
       child: Column(
         children: [
-          TextField(
-            controller: _akunController,
-            decoration: InputDecoration(
-              labelText: "Nama Akun/Dompet Baru (Misal: Mandiri)",
-              border: OutlineInputBorder(),
-            ),
-          ),
-          SizedBox(height: 10),
-          ElevatedButton(
-            onPressed: () {
-              if (_akunController.text.isNotEmpty) {
-                setState(() {
-                  masterAkun.add(_akunController.text);
-                  saveData();
-                  _akunController.clear();
-                });
-              }
-            },
-            child: Text("Simpan Akun"),
-          ),
-          Divider(height: 30),
           Expanded(
-            child: ListView.builder(
-              itemCount: masterAkun.length,
-              itemBuilder: (c, i) {
-                final akunNama = masterAkun[i];
-                return Card(
-                  child: ListTile(
-                    leading: Icon(Icons.account_balance_wallet, color: Colors.blue),
-                    title: Text(akunNama),
-                    trailing: Row(
+            child: masterAkun.isEmpty
+                ? Center(
+                    child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        IconButton(
-                          icon: Icon(Icons.edit, color: Colors.blue, size: 20),
-                          padding: EdgeInsets.zero,
-                          constraints: BoxConstraints(),
-                          onPressed: () => _editAkun(i),
-                        ),
-                        SizedBox(width: 8),
-                        IconButton(
-                          icon: Icon(Icons.delete, color: Colors.red, size: 20),
-                          padding: EdgeInsets.zero,
-                          constraints: BoxConstraints(),
-                          onPressed: () => _hapusAkun(i),
+                        Icon(Icons.account_balance_wallet_outlined,
+                            size: 64, color: Colors.grey[500]),
+                        const SizedBox(height: 10),
+                        const Text(
+                          "Belum ada akun/dompet.\nTambah akun baru via tombol \"+\" di bawah.",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: Colors.grey),
                         ),
                       ],
                     ),
+                  )
+                : ListView.builder(
+                    itemCount: masterAkun.length,
+                    itemBuilder: (c, i) {
+                      final akunNama = masterAkun[i];
+                      return Card(
+                        child: ListTile(
+                          leading: Icon(Icons.account_balance_wallet,
+                              color: Colors.blue),
+                          title: Text(akunNama),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: Icon(Icons.edit,
+                                    color: Colors.blue, size: 20),
+                                padding: EdgeInsets.zero,
+                                constraints: BoxConstraints(),
+                                onPressed: () => _editAkun(i),
+                              ),
+                              SizedBox(width: 8),
+                              IconButton(
+                                icon: Icon(Icons.delete,
+                                    color: Colors.red, size: 20),
+                                padding: EdgeInsets.zero,
+                                constraints: BoxConstraints(),
+                                onPressed: () => _hapusAkun(i),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
                   ),
-                );
-              },
-            ),
           ),
         ],
       ),

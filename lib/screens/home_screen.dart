@@ -21,11 +21,12 @@ class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
   String _filterAkun = "Semua";
   String _filterKategori = "Semua";
+  // Melacak tab aktif di KategoriScreen agar FAB bisa auto-select tipe
+  String _kategoriTabTipe = "Pengeluaran";
 
   // Filter Tanggal Default: Bulan Juni 2026 (Menyesuaikan waktu saat ini)
   DateTime rangeMulai = DateTime(2026, 6, 1);
   DateTime rangeSelesai = DateTime(2026, 6, 30);
-
   void _editTransaksi(Transaksi item) {
     showDialog(
       context: context,
@@ -185,6 +186,307 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  void _tambahTransaksi() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            List<String> kategoriDialog = masterKategori
+                .where((k) => k.tipe == _pilihanTipe)
+                .map((k) => k.nama)
+                .toList();
+
+            if (kategoriDialog.isNotEmpty &&
+                !kategoriDialog.contains(_pilihanKategori)) {
+              _pilihanKategori = kategoriDialog.first;
+            }
+
+            return AlertDialog(
+              title: const Row(
+                children: [
+                  Icon(Icons.add_circle, color: Colors.green),
+                  SizedBox(width: 8),
+                  Text("Tambah Transaksi"),
+                ],
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    TextField(
+                      controller: _nominalController,
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [RibuanInputFormatter()],
+                      decoration: const InputDecoration(
+                        labelText: "Nominal (Rp)",
+                        border: OutlineInputBorder(),
+                        prefixText: "Rp ",
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: _catatanController,
+                      decoration: const InputDecoration(
+                        labelText: "Keterangan/Catatan",
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<String>(
+                      initialValue: _pilihanTipe,
+                      decoration: const InputDecoration(
+                        labelText: "Tipe",
+                        border: OutlineInputBorder(),
+                      ),
+                      items: ["Pengeluaran", "Pemasukan"]
+                          .map((t) => DropdownMenuItem(value: t, child: Text(t)))
+                          .toList(),
+                      onChanged: (val) {
+                        setDialogState(() {
+                          _pilihanTipe = val!;
+                          // Reset kategori saat tipe berubah
+                          final newList = masterKategori
+                              .where((k) => k.tipe == _pilihanTipe)
+                              .map((k) => k.nama)
+                              .toList();
+                          _pilihanKategori =
+                              newList.isNotEmpty ? newList.first : "";
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<String>(
+                      key: ValueKey(_pilihanTipe),
+                      initialValue: kategoriDialog.isNotEmpty
+                          ? _pilihanKategori
+                          : null,
+                      decoration: const InputDecoration(
+                        labelText: "Kategori",
+                        border: OutlineInputBorder(),
+                      ),
+                      items: kategoriDialog
+                          .map((k) => DropdownMenuItem(value: k, child: Text(k)))
+                          .toList(),
+                      onChanged: (val) =>
+                          setDialogState(() => _pilihanKategori = val!),
+                    ),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<String>(
+                      initialValue: _pilihanAkun,
+                      decoration: const InputDecoration(
+                        labelText: "Simpan/Ambil Dari (Akun)",
+                        border: OutlineInputBorder(),
+                      ),
+                      items: masterAkun
+                          .map((a) => DropdownMenuItem(value: a, child: Text(a)))
+                          .toList(),
+                      onChanged: (val) =>
+                          setDialogState(() => _pilihanAkun = val!),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    _nominalController.clear();
+                    _catatanController.clear();
+                    Navigator.pop(context);
+                  },
+                  child: const Text("Batal"),
+                ),
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.save),
+                  label: const Text("Simpan"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    foregroundColor: Colors.white,
+                  ),
+                  onPressed: () {
+                    if (_nominalController.text.isNotEmpty) {
+                      setState(() {
+                        daftarTransaksi.add(
+                          Transaksi(
+                            id: DateTime.now().toString(),
+                            nominal: double.tryParse(
+                                  _nominalController.text.replaceAll('.', ''),
+                                ) ??
+                                0,
+                            catatan: _catatanController.text,
+                            tipe: _pilihanTipe,
+                            kategori: _pilihanKategori,
+                            akun: _pilihanAkun,
+                            tanggal: DateTime.now(),
+                          ),
+                        );
+                        saveData();
+                        _nominalController.clear();
+                        _catatanController.clear();
+                      });
+                      Navigator.pop(context);
+                    }
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _tambahKategoriDialog() {
+    final TextEditingController namaCtrl = TextEditingController();
+    // Auto-select tipe berdasarkan tab yang sedang dibuka di KategoriScreen
+    String tipe = _kategoriTabTipe;
+    IconData ikon = daftarPilihanIkon.first;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Row(
+                children: [
+                  Icon(Icons.category, color: Colors.green),
+                  SizedBox(width: 8),
+                  Text("Tambah Kategori"),
+                ],
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    TextField(
+                      controller: namaCtrl,
+                      decoration: const InputDecoration(
+                        labelText: "Nama Kategori",
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<String>(
+                      initialValue: tipe,
+                      decoration: const InputDecoration(
+                        labelText: "Tipe Kategori",
+                        border: OutlineInputBorder(),
+                      ),
+                      items: ["Pengeluaran", "Pemasukan"]
+                          .map((t) => DropdownMenuItem(value: t, child: Text(t)))
+                          .toList(),
+                      onChanged: (val) => setDialogState(() => tipe = val!),
+                    ),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<IconData>(
+                      initialValue: ikon,
+                      decoration: const InputDecoration(
+                        labelText: "Pilih Logo Kategori",
+                        border: OutlineInputBorder(),
+                      ),
+                      items: daftarPilihanIkon.map((IconData ic) {
+                        return DropdownMenuItem<IconData>(
+                          value: ic,
+                          child: Row(
+                            children: [
+                              Icon(ic, color: Colors.green),
+                              const SizedBox(width: 12),
+                              Text(getNamaIkon(ic)),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (val) => setDialogState(() => ikon = val!),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text("Batal"),
+                ),
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.save),
+                  label: const Text("Simpan"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    foregroundColor: Colors.white,
+                  ),
+                  onPressed: () {
+                    if (namaCtrl.text.isNotEmpty) {
+                      setState(() {
+                        masterKategori.add(KategoriModel(
+                          nama: namaCtrl.text,
+                          tipe: tipe,
+                          ikon: ikon,
+                        ));
+                        saveData();
+                      });
+                      Navigator.pop(context);
+                    }
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _tambahAkunDialog() {
+    final TextEditingController namaCtrl = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.account_balance_wallet, color: Colors.green),
+              SizedBox(width: 8),
+              Text("Tambah Akun/Dompet"),
+            ],
+          ),
+          content: TextField(
+            controller: namaCtrl,
+            decoration: const InputDecoration(
+              labelText: "Nama Akun/Dompet (Misal: Mandiri)",
+              border: OutlineInputBorder(),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Batal"),
+            ),
+            ElevatedButton.icon(
+              icon: const Icon(Icons.save),
+              label: const Text("Simpan"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () {
+                if (namaCtrl.text.isNotEmpty) {
+                  setState(() {
+                    masterAkun.add(namaCtrl.text);
+                    saveData();
+                  });
+                  Navigator.pop(context);
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     // Memilih kategori yang sesuai secara dinamis
@@ -250,102 +552,6 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Card(
-              margin: EdgeInsets.only(bottom: 15),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  children: [
-                    Text(
-                      "TRANSAKSI",
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    TextField(
-                      controller: _nominalController,
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [RibuanInputFormatter()],
-                      decoration: InputDecoration(labelText: "Nominal (Rp)"),
-                    ),
-                    TextField(
-                      controller: _catatanController,
-                      decoration: InputDecoration(
-                        labelText: "Keterangan/Catatan",
-                      ),
-                    ),
-                    DropdownButtonFormField<String>(
-                      initialValue: _pilihanTipe,
-                      decoration: InputDecoration(labelText: "Tipe"),
-                      items: ["Pengeluaran", "Pemasukan"]
-                          .map(
-                            (t) => DropdownMenuItem(value: t, child: Text(t)),
-                          )
-                          .toList(),
-                      onChanged: (val) => setState(() => _pilihanTipe = val!),
-                    ),
-                    DropdownButtonFormField<String>(
-                      initialValue: _pilihanKategori.isEmpty
-                          ? null
-                          : _pilihanKategori,
-                      decoration: InputDecoration(labelText: "Kategori"),
-                      items: kategoriAktif
-                          .map(
-                            (k) => DropdownMenuItem(value: k, child: Text(k)),
-                          )
-                          .toList(),
-                      onChanged: (val) =>
-                          setState(() => _pilihanKategori = val!),
-                    ),
-                    DropdownButtonFormField<String>(
-                      initialValue: _pilihanAkun,
-                      decoration: InputDecoration(
-                        labelText: "Simpan/Ambil Dari",
-                      ),
-                      items: masterAkun
-                          .map(
-                            (a) => DropdownMenuItem(value: a, child: Text(a)),
-                          )
-                          .toList(),
-                      onChanged: (val) => setState(() => _pilihanAkun = val!),
-                    ),
-                    SizedBox(height: 15),
-                    ElevatedButton(
-                      onPressed: () {
-                        if (_nominalController.text.isNotEmpty) {
-                          setState(() {
-                            daftarTransaksi.add(
-                              Transaksi(
-                                id: DateTime.now().toString(),
-                                nominal:
-                                    double.tryParse(
-                                      _nominalController.text.replaceAll(
-                                        '.',
-                                        '',
-                                      ),
-                                    ) ??
-                                    0,
-                                catatan: _catatanController.text,
-                                tipe: _pilihanTipe,
-                                kategori: _pilihanKategori,
-                                akun: _pilihanAkun,
-                                tanggal: DateTime.now(),
-                              ),
-                            );
-                            saveData();
-                            _nominalController.clear();
-                            _catatanController.clear();
-                          });
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        foregroundColor: Colors.white,
-                      ),
-                      child: Text("Simpan Transaksi"),
-                    ),
-                  ],
-                ),
-              ),
-            ),
             // FILTER RANGE TANGGAL
             Text(
               "FILTER PERIODE",
@@ -567,7 +773,9 @@ class _HomeScreenState extends State<HomeScreen> {
       activeBody = const GrafikScreen();
     } else if (_currentIndex == 2) {
       appBarTitle = "Kelola Master Kategori";
-      activeBody = KategoriScreen();
+      activeBody = KategoriScreen(
+        onTabChanged: (tipe) => setState(() => _kategoriTabTipe = tipe),
+      );
     } else {
       appBarTitle = "Master Akun / Dompet";
       activeBody = AkunScreen();
@@ -663,6 +871,32 @@ class _HomeScreenState extends State<HomeScreen> {
             : null,
       ),
       body: activeBody,
+      floatingActionButton: (_currentIndex == 0 ||
+              _currentIndex == 2 ||
+              _currentIndex == 3)
+          ? FloatingActionButton.extended(
+              onPressed: () {
+                if (_currentIndex == 0) {
+                  _tambahTransaksi();
+                } else if (_currentIndex == 2) {
+                  _tambahKategoriDialog();
+                } else if (_currentIndex == 3) {
+                  _tambahAkunDialog();
+                }
+              },
+              backgroundColor: Colors.green,
+              foregroundColor: Colors.white,
+              icon: const Icon(Icons.add),
+              label: Text(
+                _currentIndex == 0
+                    ? "Transaksi"
+                    : _currentIndex == 2
+                        ? "Kategori"
+                        : "Akun",
+              ),
+            )
+          : null,
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         selectedItemColor: Colors.green,

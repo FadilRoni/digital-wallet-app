@@ -3,6 +3,8 @@ import '../data_model.dart';
 import 'kategori_screen.dart';
 import 'akun_screen.dart';
 import 'grafik_screen.dart';
+import 'utang_screen.dart';
+
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -1203,9 +1205,12 @@ class _HomeScreenState extends State<HomeScreen> {
       activeBody = KategoriScreen(
         onTabChanged: (tipe) => setState(() => _kategoriTabTipe = tipe),
       );
-    } else {
+    } else if (_currentIndex == 3) {
       appBarTitle = "Master Akun / Dompet";
       activeBody = AkunScreen();
+    } else {
+      appBarTitle = "Utang & Piutang";
+      activeBody = const UtangScreen();
     }
 
     return Scaffold(
@@ -1336,6 +1341,10 @@ class _HomeScreenState extends State<HomeScreen> {
           BottomNavigationBarItem(
             icon: Icon(Icons.account_balance_wallet),
             label: "Akun/Dompet",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.assignment_ind_outlined),
+            label: "Utang",
           ),
         ],
       ),

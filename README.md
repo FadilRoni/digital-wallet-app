@@ -53,6 +53,107 @@ Aplikasi manajemen keuangan pribadi berbasis Flutter yang dirancang dengan antar
 
 ---
 
+## 🚀 Cara Install & Menjalankan
+
+### **Prasyarat (Prerequisites)**
+Sebelum memulai, pastikan perangkat Anda telah terpasang:
+* **Flutter SDK** (Versi 3.12.2 atau lebih baru)
+* **Dart SDK**
+* Koneksi internet (untuk mengunduh paket dependensi dan memperbarui harga kripto)
+* Emulator/Device Android, iOS, atau lingkungan build desktop (Windows)
+
+### **Langkah-langkah Install**
+1. **Kloning Repositori**:
+   ```bash
+   git clone https://github.com/fadilroni/digital-wallet-app
+   cd digital-wallet-app
+   ```
+2. **Unduh Dependensi**:
+   Unduh semua paket Flutter/Dart yang dibutuhkan dengan menjalankan perintah berikut di terminal:
+   ```bash
+   flutter pub get
+   ```
+
+### **Langkah-langkah Menjalankan (Run)**
+Untuk menjalankan aplikasi dalam mode pengembangan:
+1. **Cek Perangkat yang Tersedia**:
+   ```bash
+   flutter devices
+   ```
+2. **Jalankan Aplikasi**:
+   ```bash
+   flutter run
+   ```
+   *Pilih perangkat target yang sesuai ketika diminta.*
+
+---
+
+## 📁 Struktur Proyek (Project Structure)
+
+Berikut adalah struktur folder dan berkas utama dari proyek ini:
+
+```text
+digital-wallet-app/
+├── android/                  # Konfigurasi native untuk platform Android
+├── assets/                   # Aset gambar, ikon, dan logo aplikasi
+├── lib/                      # Kode utama aplikasi (Dart)
+│   ├── main.dart             # Titik masuk utama (entry point) aplikasi
+│   ├── data_model.dart       # Model data Hive, database lokal, & logika backup
+│   └── screens/              # Halaman-halaman UI aplikasi
+│       ├── home_screen.dart      # Halaman Dashboard, Filter, & Form Transaksi
+│       ├── akun_screen.dart      # Halaman Manajemen Akun & Saldo Awal
+│       ├── kategori_screen.dart  # Halaman Manajemen Kategori (Drag & Drop)
+│       ├── utang_screen.dart     # Halaman Kas Utang & Piutang
+│       ├── asset_screen.dart     # Halaman Portofolio Kripto (API Indodax)
+│       └── grafik_screen.dart    # Halaman Grafik Pie Chart Pengeluaran
+├── web/                      # Konfigurasi build untuk platform Web
+├── windows/                  # Konfigurasi build untuk platform Windows Desktop
+└── pubspec.yaml              # Konfigurasi dependensi, aset, & metadata proyek
+```
+
+---
+
+## 🤝 Kontribusi (Contributing)
+
+Kontribusi sangat diapresiasi! Jika Anda ingin meningkatkan atau menambahkan fitur pada aplikasi ini, ikuti langkah berikut:
+
+1. **Fork** repositori ini.
+2. Buat branch fitur baru Anda:
+   ```bash
+   git checkout -b feature/fitur-baru
+   ```
+3. Commit perubahan Anda dengan pesan yang jelas:
+   ```bash
+   git commit -m "Menambahkan fitur: Deskripsi Fitur Baru"
+   ```
+4. Push branch tersebut ke repositori Fork Anda:
+   ```bash
+   git push origin feature/fitur-baru
+   ```
+   *Atau buat pull request dari branch Anda ke repositori utama.*
+
+---
+
+## 📄 Lisensi (License)
+
+Proyek ini dilisensikan di bawah **MIT License** - Lisensi Open Source yang bebas digunakan, dimodifikasi, dan didistribusikan secara komersial maupun non-komersial. Lihat berkas `LICENSE` untuk informasi lebih lanjut.
+
+---
+
+## 👤 Pembuat (Author)
+
+* **Fadil Roni** - *Developer Utama* - [GitHub](https://github.com/FadilRoni)
+
+---
+
+## ☕ Dukungan (Support)
+
+Jika aplikasi ini bermanfaat bagi Anda, dukung proyek ini dengan cara:
+* Memberikan 🌟 **Star** pada repositori ini.
+* Melaporkan masalah (bugs) atau saran fitur baru melalui menu **Issues** di GitHub.
+
+---
+
 ## 📝 Riwayat Perubahan (Changelog)
 
 ### **Versi 2.0.2 (Terbaru)**

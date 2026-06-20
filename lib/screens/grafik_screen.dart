@@ -111,6 +111,25 @@ class _GrafikScreenState extends State<GrafikScreen>
     return map[a.symbol] ?? palette[idx % palette.length];
   }
 
+  String _fmt(double v) {
+    bool isNegative = v < 0;
+    double absValue = v.abs();
+    double roundedValue = (absValue * 100).round() / 100.0;
+    String valueString = roundedValue.toStringAsFixed(2);
+    List<String> parts = valueString.split('.');
+    String integerPart = parts[0];
+    String decimalPart = parts[1];
+
+    RegExp reg = RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))');
+    String formattedInteger = integerPart.replaceAllMapped(
+      reg,
+      (Match match) => '${match[1]}.',
+    );
+
+    String result = '$formattedInteger,$decimalPart';
+    return isNegative ? '-$result' : result;
+  }
+
   // ── build ─────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
@@ -484,7 +503,7 @@ class _GrafikScreenState extends State<GrafikScreen>
               const Text('Total Kekayaan Bersih',
                   style: TextStyle(color: Colors.white70, fontSize: 13)),
               const SizedBox(height: 6),
-              Text('Rp ${formatRibuan(grandTotal)}',
+              Text('Rp ${_fmt(grandTotal)}',
                   style: const TextStyle(
                       color: Colors.white,
                       fontSize: 26,
@@ -564,7 +583,7 @@ class _GrafikScreenState extends State<GrafikScreen>
       Text(label,
           style: const TextStyle(color: Colors.white60, fontSize: 11)),
       const SizedBox(height: 3),
-      Text('Rp ${formatRibuan(val)}',
+      Text('Rp ${_fmt(val)}',
           style: TextStyle(
               color: valColor,
               fontWeight: FontWeight.bold,
@@ -583,7 +602,7 @@ class _GrafikScreenState extends State<GrafikScreen>
               style: const TextStyle(
                   fontWeight: FontWeight.bold, fontSize: 13)),
         ),
-        Text('${pct.toStringAsFixed(1)}%  Rp ${formatRibuan(sub)}',
+        Text('${pct.toStringAsFixed(1)}%  Rp ${_fmt(sub)}',
             style: TextStyle(
                 fontWeight: FontWeight.bold,
                 color: color,
@@ -620,7 +639,7 @@ class _GrafikScreenState extends State<GrafikScreen>
         Column(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Text('Rp ${formatRibuan(s.nilai)}',
+            Text('Rp ${_fmt(s.nilai)}',
                 style: TextStyle(
                     fontWeight: FontWeight.bold,
                     color: s.color,

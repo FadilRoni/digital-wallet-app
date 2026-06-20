@@ -25,13 +25,19 @@ class Transaksi {
   });
 }
 
-// STRUKTUR UNTUK ASSET CRYPTO
+// STRUKTUR UNTUK ASSET CRYPTO & DEPOSITO / REKSADANA
 class Asset {
   String id;
   String symbol;
   String name;
   double quantity;
-  double buyPrice; // rata-rata harga beli dalam IDR
+  double buyPrice; // rata-rata harga beli dalam IDR (atau nominal investasi)
+  String? assetType; // "crypto" atau "deposito"
+  double? interestRate; // % bunga
+  int? tenor; // tenor hari (7, 14, 21, 45, dsb)
+  DateTime? depositDate; // tanggal deposito
+  String? sourceAccount; // akun asal
+  bool? isInterestPaid; // apakah bunga sudah ditambahkan ke transaksi
 
   Asset({
     required this.id,
@@ -39,6 +45,12 @@ class Asset {
     required this.name,
     required this.quantity,
     required this.buyPrice,
+    this.assetType = "crypto",
+    this.interestRate,
+    this.tenor,
+    this.depositDate,
+    this.sourceAccount,
+    this.isInterestPaid = false,
   });
 }
 
@@ -175,6 +187,12 @@ Map<String, dynamic> assetToMap(Asset a) {
     'name': a.name,
     'quantity': a.quantity,
     'buyPrice': a.buyPrice,
+    'assetType': a.assetType,
+    'interestRate': a.interestRate,
+    'tenor': a.tenor,
+    'depositDate': a.depositDate?.toIso8601String(),
+    'sourceAccount': a.sourceAccount,
+    'isInterestPaid': a.isInterestPaid,
   };
 }
 
@@ -187,6 +205,12 @@ Asset assetFromMap(Map<dynamic, dynamic> map) {
     name: map['name']?.toString() ?? '',
     quantity: (map['quantity'] as num?)?.toDouble() ?? 0.0,
     buyPrice: (map['buyPrice'] as num?)?.toDouble() ?? 0.0,
+    assetType: map['assetType']?.toString() ?? 'crypto',
+    interestRate: (map['interestRate'] as num?)?.toDouble(),
+    tenor: (map['tenor'] as num?)?.toInt(),
+    depositDate: map['depositDate'] != null ? DateTime.tryParse(map['depositDate'].toString()) : null,
+    sourceAccount: map['sourceAccount']?.toString(),
+    isInterestPaid: map['isInterestPaid'] as bool? ?? false,
   );
 }
 
@@ -410,6 +434,24 @@ void loadData() {
   if (!hasHutangPemasukan) {
     masterKategori.add(
       KategoriModel(nama: "Hutang", tipe: "Pemasukan", ikon: Icons.payments),
+    );
+  }
+
+  // Pastikan kategori "Investasi" ada untuk Pemasukan dan Pengeluaran
+  final hasInvestasiPengeluaran = masterKategori.any(
+    (k) => k.nama == "Investasi" && k.tipe == "Pengeluaran",
+  );
+  if (!hasInvestasiPengeluaran) {
+    masterKategori.add(
+      KategoriModel(nama: "Investasi", tipe: "Pengeluaran", ikon: Icons.trending_up),
+    );
+  }
+  final hasInvestasiPemasukan = masterKategori.any(
+    (k) => k.nama == "Investasi" && k.tipe == "Pemasukan",
+  );
+  if (!hasInvestasiPemasukan) {
+    masterKategori.add(
+      KategoriModel(nama: "Investasi", tipe: "Pemasukan", ikon: Icons.trending_up),
     );
   }
   // Load Transaksi

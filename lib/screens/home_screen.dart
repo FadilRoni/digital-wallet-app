@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:excel/excel.dart' as xl;
+import 'package:share_plus/share_plus.dart';
+import 'package:open_filex/open_filex.dart';
 import '../data_model.dart';
 import 'kategori_screen.dart';
 import 'akun_screen.dart';
@@ -37,7 +41,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   String _pilihanTipe = "Pengeluaran";
   String _pilihanKategori = "";
-  String _pilihanAkun = (akunUtama.isNotEmpty && masterAkun.contains(akunUtama)) ? akunUtama : (masterAkun.isNotEmpty ? masterAkun.first : "");
+  String _pilihanAkun = (akunUtama.isNotEmpty && masterAkun.contains(akunUtama))
+      ? akunUtama
+      : (masterAkun.isNotEmpty ? masterAkun.first : "");
   int _currentIndex = 0;
   String _filterAkun = "Semua";
   String _filterKategori = "Semua";
@@ -471,12 +477,16 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  static const _storageChannel = MethodChannel('app.bantudigital.dompet_digital/storage');
+  static const _storageChannel = MethodChannel(
+    'app.bantudigital.dompet_digital/storage',
+  );
 
   Future<bool> _checkStoragePermission() async {
     if (!Platform.isAndroid) return true;
     try {
-      final bool hasPerm = await _storageChannel.invokeMethod('checkStoragePermission');
+      final bool hasPerm = await _storageChannel.invokeMethod(
+        'checkStoragePermission',
+      );
       return hasPerm;
     } catch (_) {
       return false;
@@ -505,9 +515,9 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Gagal membuka file manager: $e")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Gagal membuka file manager: $e")));
     }
   }
 
@@ -516,9 +526,8 @@ class _HomeScreenState extends State<HomeScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => const Center(
-        child: CircularProgressIndicator(color: Colors.green),
-      ),
+      builder: (context) =>
+          const Center(child: CircularProgressIndicator(color: Colors.green)),
     );
 
     List<File> files = await getAvailableBackupFiles();
@@ -566,7 +575,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 child: Text(
                   displayPath,
-                  style: const TextStyle(fontFamily: 'monospace', fontSize: 12, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    fontFamily: 'monospace',
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
               const SizedBox(height: 12),
@@ -616,7 +629,10 @@ class _HomeScreenState extends State<HomeScreen> {
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setBottomSheetState) {
             final List<File> filteredFiles = files.where((file) {
-              final filename = file.path.split(Platform.pathSeparator).last.toLowerCase();
+              final filename = file.path
+                  .split(Platform.pathSeparator)
+                  .last
+                  .toLowerCase();
               return filename.contains(searchQuery.toLowerCase());
             }).toList();
 
@@ -661,7 +677,10 @@ class _HomeScreenState extends State<HomeScreen> {
                               searchQuery.isEmpty
                                   ? "Ditemukan ${files.length} file backup"
                                   : "Ditemukan ${filteredFiles.length} dari ${files.length} file backup",
-                              style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 13,
+                              ),
                             ),
                           ],
                         ),
@@ -686,14 +705,20 @@ class _HomeScreenState extends State<HomeScreen> {
                               },
                             )
                           : null,
-                      contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+                      contentPadding: const EdgeInsets.symmetric(
+                        vertical: 0,
+                        horizontal: 16,
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(color: Colors.grey[300]!),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Colors.green, width: 2),
+                        borderSide: const BorderSide(
+                          color: Colors.green,
+                          width: 2,
+                        ),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -713,7 +738,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       _pickFileFromFileManager();
                     },
                     icon: const Icon(Icons.folder_open, color: Colors.green),
-                    label: const Text("Pilih File dari File Manager", style: TextStyle(color: Colors.green)),
+                    label: const Text(
+                      "Pilih File dari File Manager",
+                      style: TextStyle(color: Colors.green),
+                    ),
                     style: OutlinedButton.styleFrom(
                       side: const BorderSide(color: Colors.green),
                       shape: RoundedRectangleBorder(
@@ -733,11 +761,18 @@ class _HomeScreenState extends State<HomeScreen> {
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.search_off, size: 48, color: Colors.grey[400]),
+                                Icon(
+                                  Icons.search_off,
+                                  size: 48,
+                                  color: Colors.grey[400],
+                                ),
                                 const SizedBox(height: 8),
                                 Text(
                                   "Tidak ada file yang cocok",
-                                  style: TextStyle(color: Colors.grey[600], fontWeight: FontWeight.bold),
+                                  style: TextStyle(
+                                    color: Colors.grey[600],
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ],
                             ),
@@ -748,28 +783,43 @@ class _HomeScreenState extends State<HomeScreen> {
                             itemBuilder: (context, index) {
                               final File file = filteredFiles[index];
                               final String fullPath = file.path;
-                              final String filename = fullPath.split(Platform.pathSeparator).last;
+                              final String filename = fullPath
+                                  .split(Platform.pathSeparator)
+                                  .last;
 
                               String displayDate = "";
                               try {
                                 final stat = file.statSync();
                                 final dt = stat.modified;
                                 final day = dt.day.toString().padLeft(2, '0');
-                                final month = dt.month.toString().padLeft(2, '0');
+                                final month = dt.month.toString().padLeft(
+                                  2,
+                                  '0',
+                                );
                                 final year = dt.year;
                                 final hour = dt.hour.toString().padLeft(2, '0');
-                                final minute = dt.minute.toString().padLeft(2, '0');
+                                final minute = dt.minute.toString().padLeft(
+                                  2,
+                                  '0',
+                                );
                                 displayDate = "$day/$month/$year $hour:$minute";
                               } catch (_) {
-                                displayDate = "Waktu modifikasi tidak diketahui";
+                                displayDate =
+                                    "Waktu modifikasi tidak diketahui";
                               }
 
                               String sourceApp = "";
-                              if (fullPath.contains('com.example.dompet_pribadi')) {
+                              if (fullPath.contains(
+                                'com.example.dompet_pribadi',
+                              )) {
                                 sourceApp = " (Lama: Dompet Pribadi)";
-                              } else if (fullPath.contains('com.example.dompet_digital')) {
+                              } else if (fullPath.contains(
+                                'com.example.dompet_digital',
+                              )) {
                                 sourceApp = " (Lama: Dompet Digital)";
-                              } else if (fullPath.contains('app.bantudigital.dompet_digital')) {
+                              } else if (fullPath.contains(
+                                'app.bantudigital.dompet_digital',
+                              )) {
                                 sourceApp = " (Aplikasi Sekarang)";
                               }
 
@@ -781,28 +831,47 @@ class _HomeScreenState extends State<HomeScreen> {
                                   side: BorderSide(color: Colors.grey[300]!),
                                 ),
                                 child: ListTile(
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 8,
+                                  ),
                                   leading: CircleAvatar(
-                                    backgroundColor: Colors.green.withOpacity(0.1),
-                                    child: const Icon(Icons.description, color: Colors.green),
+                                    backgroundColor: Colors.green.withOpacity(
+                                      0.1,
+                                    ),
+                                    child: const Icon(
+                                      Icons.description,
+                                      color: Colors.green,
+                                    ),
                                   ),
                                   title: Text(
                                     filename,
-                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                    ),
                                   ),
                                   subtitle: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       const SizedBox(height: 4),
                                       Text(
                                         displayDate,
-                                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey[600],
+                                        ),
                                       ),
                                       if (sourceApp.isNotEmpty) ...[
                                         const SizedBox(height: 2),
                                         Text(
                                           sourceApp,
-                                          style: const TextStyle(fontSize: 11, color: Colors.blue, fontWeight: FontWeight.w500),
+                                          style: const TextStyle(
+                                            fontSize: 11,
+                                            color: Colors.blue,
+                                            fontWeight: FontWeight.w500,
+                                          ),
                                         ),
                                       ],
                                     ],
@@ -820,7 +889,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: 16),
                   TextButton(
                     onPressed: () => Navigator.pop(ctx),
-                    child: const Text("Batal", style: TextStyle(fontWeight: FontWeight.bold)),
+                    child: const Text(
+                      "Batal",
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
                   ),
                 ],
               ),
@@ -844,7 +916,9 @@ class _HomeScreenState extends State<HomeScreen> {
               Text("Konfirmasi Impor"),
             ],
           ),
-          content: Text("Menghidupkan data dari file:\n$filename\n\nSemua data saat ini di aplikasi akan ditimpa. Lanjutkan?"),
+          content: Text(
+            "Menghidupkan data dari file:\n$filename\n\nSemua data saat ini di aplikasi akan ditimpa. Lanjutkan?",
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogCtx),
@@ -943,7 +1017,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ],
                     ),
                     const SizedBox(height: 24),
-                    
+
                     // SECTION 1: LIMIT PENGELUARAN
                     const Text(
                       "BATAS PENGELUARAN",
@@ -956,7 +1030,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(height: 8),
                     SwitchListTile(
                       title: const Text("Aktifkan Batas Pengeluaran"),
-                      subtitle: const Text("Beri peringatan jika pengeluaran melebihi batas"),
+                      subtitle: const Text(
+                        "Beri peringatan jika pengeluaran melebihi batas",
+                      ),
                       value: enableLimit,
                       activeColor: Colors.green,
                       contentPadding: EdgeInsets.zero,
@@ -996,7 +1072,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(height: 8),
                     SwitchListTile(
                       title: const Text("Sembunyikan Saldo"),
-                      subtitle: const Text("Sembunyikan saldo di halaman utama"),
+                      subtitle: const Text(
+                        "Sembunyikan saldo di halaman utama",
+                      ),
                       value: isHideSaldo,
                       activeColor: Colors.green,
                       contentPadding: EdgeInsets.zero,
@@ -1036,11 +1114,14 @@ class _HomeScreenState extends State<HomeScreen> {
                             onPressed: () async {
                               Navigator.pop(ctx);
                               final messenger = ScaffoldMessenger.of(context);
-                              
-                              bool hasPermission = await _checkStoragePermission();
+
+                              bool hasPermission =
+                                  await _checkStoragePermission();
                               if (!hasPermission) {
                                 await _requestStoragePermission();
-                                await Future.delayed(const Duration(milliseconds: 500));
+                                await Future.delayed(
+                                  const Duration(milliseconds: 500),
+                                );
                                 hasPermission = await _checkStoragePermission();
                                 if (!hasPermission) {
                                   if (!mounted) return;
@@ -1048,10 +1129,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                     context: context,
                                     builder: (context) => AlertDialog(
                                       title: const Text("Izin Dibutuhkan"),
-                                      content: const Text("Aplikasi membutuhkan izin akses semua file untuk dapat menulis cadangan ke penyimpanan internal /backup/dompet_digital."),
+                                      content: const Text(
+                                        "Aplikasi membutuhkan izin akses semua file untuk dapat menulis cadangan ke penyimpanan internal /backup/dompet_digital.",
+                                      ),
                                       actions: [
                                         TextButton(
-                                          onPressed: () => Navigator.pop(context),
+                                          onPressed: () =>
+                                              Navigator.pop(context),
                                           child: const Text("Tutup"),
                                         ),
                                       ],
@@ -1065,17 +1149,23 @@ class _HomeScreenState extends State<HomeScreen> {
                               if (path != null) {
                                 String displayPath = path;
                                 if (path.contains('storage/emulated/0/')) {
-                                  displayPath = path.substring(path.indexOf('backup/'));
+                                  displayPath = path.substring(
+                                    path.indexOf('backup/'),
+                                  );
                                 }
                                 messenger.showSnackBar(
                                   SnackBar(
-                                    content: Text('Backup berhasil diekspor ke Penyimpanan Internal:\n$displayPath'),
+                                    content: Text(
+                                      'Backup berhasil diekspor ke Penyimpanan Internal:\n$displayPath',
+                                    ),
                                     duration: const Duration(seconds: 8),
                                   ),
                                 );
                               } else {
                                 messenger.showSnackBar(
-                                  const SnackBar(content: Text('Gagal mengekspor data.')),
+                                  const SnackBar(
+                                    content: Text('Gagal mengekspor data.'),
+                                  ),
                                 );
                               }
                             },
@@ -1084,8 +1174,14 @@ class _HomeScreenState extends State<HomeScreen> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: OutlinedButton.icon(
-                            icon: const Icon(Icons.download, color: Colors.green),
-                            label: const Text("Impor Data", style: TextStyle(color: Colors.green)),
+                            icon: const Icon(
+                              Icons.download,
+                              color: Colors.green,
+                            ),
+                            label: const Text(
+                              "Impor Data",
+                              style: TextStyle(color: Colors.green),
+                            ),
                             style: OutlinedButton.styleFrom(
                               side: const BorderSide(color: Colors.green),
                               padding: const EdgeInsets.symmetric(vertical: 12),
@@ -1095,11 +1191,14 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                             onPressed: () async {
                               Navigator.pop(ctx);
-                              
-                              bool hasPermission = await _checkStoragePermission();
+
+                              bool hasPermission =
+                                  await _checkStoragePermission();
                               if (!hasPermission) {
                                 await _requestStoragePermission();
-                                await Future.delayed(const Duration(milliseconds: 500));
+                                await Future.delayed(
+                                  const Duration(milliseconds: 500),
+                                );
                                 hasPermission = await _checkStoragePermission();
                                 if (!hasPermission) {
                                   if (!mounted) return;
@@ -1107,10 +1206,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                     context: context,
                                     builder: (context) => AlertDialog(
                                       title: const Text("Izin Dibutuhkan"),
-                                      content: const Text("Aplikasi membutuhkan izin akses semua file untuk membaca daftar file cadangan di penyimpanan internal /backup/dompet_digital."),
+                                      content: const Text(
+                                        "Aplikasi membutuhkan izin akses semua file untuk membaca daftar file cadangan di penyimpanan internal /backup/dompet_digital.",
+                                      ),
                                       actions: [
                                         TextButton(
-                                          onPressed: () => Navigator.pop(context),
+                                          onPressed: () =>
+                                              Navigator.pop(context),
                                           child: const Text("Tutup"),
                                         ),
                                       ],
@@ -1151,7 +1253,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       },
                       child: const Text(
                         "Simpan Pengaturan",
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
                       ),
                     ),
                   ],
@@ -1162,6 +1267,259 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       },
     );
+  }
+
+  void _exportToExcel(List<Transaksi> transaksi) async {
+    if (transaksi.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Tidak ada transaksi untuk diekspor.")),
+      );
+      return;
+    }
+
+    // Tampilkan loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: Card(
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(color: Colors.green),
+                SizedBox(width: 16),
+                Text(
+                  "Membuat Excel...",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    try {
+      var excel = xl.Excel.createExcel();
+      xl.Sheet sheetObject = excel['Laporan Transaksi'];
+
+      if (excel.tables.containsKey('Sheet1')) {
+        excel.delete('Sheet1');
+      }
+
+      // Headers
+      List<xl.CellValue> headers = [
+        xl.TextCellValue("No"),
+        xl.TextCellValue("Tanggal"),
+        xl.TextCellValue("Waktu"),
+        xl.TextCellValue("Tipe"),
+        xl.TextCellValue("Kategori"),
+        xl.TextCellValue("Akun / Dompet"),
+        xl.TextCellValue("Nominal (Rp)"),
+        xl.TextCellValue("Catatan"),
+      ];
+      sheetObject.appendRow(headers);
+
+      // Header styling
+      final headerStyle = xl.CellStyle(
+        bold: true,
+        horizontalAlign: xl.HorizontalAlign.Center,
+        backgroundColorHex: xl.ExcelColor.fromHexString('#4CAF50'),
+        fontColorHex: xl.ExcelColor.fromHexString('#FFFFFF'),
+      );
+
+      for (int col = 0; col < headers.length; col++) {
+        var cell = sheetObject.cell(
+          xl.CellIndex.indexByColumnRow(columnIndex: col, rowIndex: 0),
+        );
+        cell.cellStyle = headerStyle;
+      }
+
+      // Add data rows
+      for (int i = 0; i < transaksi.length; i++) {
+        final t = transaksi[i];
+        final rowIdx = i + 1;
+
+        final dateStr =
+            "${t.tanggal.day}/${t.tanggal.month}/${t.tanggal.year}";
+        final timeStr =
+            "${t.tanggal.hour.toString().padLeft(2, '0')}:${t.tanggal.minute.toString().padLeft(2, '0')}";
+
+        sheetObject.appendRow([
+          xl.IntCellValue(rowIdx),
+          xl.TextCellValue(dateStr),
+          xl.TextCellValue(timeStr),
+          xl.TextCellValue(t.tipe),
+          xl.TextCellValue(t.kategori),
+          xl.TextCellValue(t.akun),
+          xl.DoubleCellValue(t.nominal),
+          xl.TextCellValue(t.catatan),
+        ]);
+
+        // Center index, date, time
+        sheetObject
+            .cell(
+              xl.CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: rowIdx),
+            )
+            .cellStyle = xl.CellStyle(horizontalAlign: xl.HorizontalAlign.Center);
+        sheetObject
+            .cell(
+              xl.CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: rowIdx),
+            )
+            .cellStyle = xl.CellStyle(horizontalAlign: xl.HorizontalAlign.Center);
+        sheetObject
+            .cell(
+              xl.CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: rowIdx),
+            )
+            .cellStyle = xl.CellStyle(horizontalAlign: xl.HorizontalAlign.Center);
+
+        // Color coding for Type
+        final typeCell = sheetObject.cell(
+          xl.CellIndex.indexByColumnRow(columnIndex: 3, rowIndex: rowIdx),
+        );
+        typeCell.cellStyle = xl.CellStyle(
+          fontColorHex: xl.ExcelColor.fromHexString(
+            t.tipe == "Pengeluaran" ? '#F44336' : '#4CAF50',
+          ),
+          bold: true,
+          horizontalAlign: xl.HorizontalAlign.Center,
+        );
+
+        // Right align nominal
+        sheetObject
+            .cell(
+              xl.CellIndex.indexByColumnRow(columnIndex: 6, rowIndex: rowIdx),
+            )
+            .cellStyle = xl.CellStyle(horizontalAlign: xl.HorizontalAlign.Right);
+      }
+
+      // Save file
+      final fileBytes = excel.save();
+      if (fileBytes == null) {
+        throw Exception("Gagal menyimpan data Excel.");
+      }
+
+      final directory = await getTemporaryDirectory();
+      final String path =
+          "${directory.path}/Laporan_Transaksi_${DateTime.now().millisecondsSinceEpoch}.xlsx";
+      final File file = File(path);
+      await file.writeAsBytes(fileBytes);
+
+      // Tutup loading dialog
+      if (mounted) Navigator.pop(context);
+
+      // Tampilkan dialog opsi share/open
+      if (!mounted) return;
+      showModalBottomSheet(
+        context: context,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        builder: (ctx) {
+          return Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.description_outlined,
+                      color: Colors.green,
+                      size: 28,
+                    ),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Text(
+                        "Excel Berhasil Dibuat",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  "Berhasil mengekspor ${transaksi.length} transaksi ke file Excel.",
+                  style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        icon: const Icon(Icons.share, color: Colors.green),
+                        label: const Text(
+                          "Bagikan",
+                          style: TextStyle(color: Colors.green),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: Colors.green),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        onPressed: () async {
+                          Navigator.pop(ctx);
+                          await Share.shareXFiles(
+                            [XFile(path)],
+                            text: "Laporan Transaksi Dompet Digital",
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        icon:
+                            const Icon(Icons.open_in_new, color: Colors.white),
+                        label: const Text(
+                          "Buka File",
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        onPressed: () async {
+                          Navigator.pop(ctx);
+                          final result = await OpenFilex.open(path);
+                          if (result.type != ResultType.done) {
+                            if (!mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  "Tidak dapat membuka file: ${result.message}",
+                                ),
+                              ),
+                            );
+                          }
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          );
+        },
+      );
+    } catch (e) {
+      if (mounted) Navigator.pop(context); // Tutup loading dialog jika error
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Terjadi kesalahan saat membuat Excel: $e")),
+      );
+    }
   }
 
   void _tambahTransaksi() {
@@ -1555,7 +1913,10 @@ class _HomeScreenState extends State<HomeScreen> {
               onPressed: () {
                 if (namaCtrl.text.isNotEmpty) {
                   final String nama = namaCtrl.text;
-                  final String saldoAwalStr = saldoAwalCtrl.text.replaceAll('.', '');
+                  final String saldoAwalStr = saldoAwalCtrl.text.replaceAll(
+                    '.',
+                    '',
+                  );
                   final double saldoAwal = double.tryParse(saldoAwalStr) ?? 0.0;
                   setState(() {
                     masterAkun.add(nama);
@@ -1609,7 +1970,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
     // Proteksi pilihan akun jika akun dihapus dari masterAkun
     if (!masterAkun.contains(_pilihanAkun) && masterAkun.isNotEmpty) {
-      _pilihanAkun = (akunUtama.isNotEmpty && masterAkun.contains(akunUtama)) ? akunUtama : masterAkun.first;
+      _pilihanAkun = (akunUtama.isNotEmpty && masterAkun.contains(akunUtama))
+          ? akunUtama
+          : masterAkun.first;
     }
 
     // Dinamis: Kategori yang ditampilkan menyesuaikan tipe yang dipilih
@@ -1674,392 +2037,400 @@ class _HomeScreenState extends State<HomeScreen> {
     } else if (_currentIndex == 4) {
       appBarTitle = "Utang & Piutang";
     } else {
-      appBarTitle = "Portofolio Aset Kripto";
+      appBarTitle = "Portofolio Asset";
     }
 
     final Widget homeBody = SingleChildScrollView(
-        padding: EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // FILTER RANGE TANGGAL
-            Text(
-              "FILTER PERIODE",
-              style: TextStyle(fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                TextButton(
-                  onPressed: () async {
-                    DateTime? picked = await showDatePicker(
-                      context: context,
-                      initialDate: rangeMulai,
-                      firstDate: DateTime(2020),
-                      lastDate: DateTime(2030),
-                    );
-                    if (picked != null) setState(() => rangeMulai = picked);
-                  },
-                  child: Text(
-                    "Dari: ${rangeMulai.day}/${rangeMulai.month}/${rangeMulai.year}",
-                  ),
+      padding: EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // FILTER RANGE TANGGAL
+          Text(
+            "FILTER PERIODE",
+            style: TextStyle(fontWeight: FontWeight.bold),
+            textAlign: TextAlign.center,
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              TextButton(
+                onPressed: () async {
+                  DateTime? picked = await showDatePicker(
+                    context: context,
+                    initialDate: rangeMulai,
+                    firstDate: DateTime(2020),
+                    lastDate: DateTime(2030),
+                  );
+                  if (picked != null) setState(() => rangeMulai = picked);
+                },
+                child: Text(
+                  "Dari: ${rangeMulai.day}/${rangeMulai.month}/${rangeMulai.year}",
                 ),
-                TextButton(
-                  onPressed: () async {
-                    DateTime? picked = await showDatePicker(
-                      context: context,
-                      initialDate: rangeSelesai,
-                      firstDate: DateTime(2020),
-                      lastDate: DateTime(2030),
-                    );
-                    if (picked != null) setState(() => rangeSelesai = picked);
-                  },
-                  child: Text(
-                    "Sampai: ${rangeSelesai.day}/${rangeSelesai.month}/${rangeSelesai.year}",
-                  ),
-                ),
-              ],
-            ),
-            // FILTER UTAMA (Tipe, Akun, Kategori)
-            Wrap(
-              spacing: 16,
-              runSpacing: 8,
-              alignment: WrapAlignment.center,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                // Filter Tipe
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      "Tipe: ",
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    SizedBox(width: 5),
-                    DropdownButton<String>(
-                      value: _filterTipe,
-                      items: ["Semua", "Pengeluaran", "Pemasukan"].map((
-                        String val,
-                      ) {
-                        return DropdownMenuItem<String>(
-                          value: val,
-                          child: Text(val),
-                        );
-                      }).toList(),
-                      onChanged: (val) {
-                        setState(() {
-                          _filterTipe = val!;
-                          // Reset filter kategori jika tidak valid dengan tipe terpilih
-                          if (_filterTipe != "Semua") {
-                            final validCats = masterKategori
-                                .where((k) => k.tipe == _filterTipe)
-                                .map((k) => k.nama)
-                                .toSet();
-                            if (!validCats.contains(_filterKategori)) {
-                              _filterKategori = "Semua";
-                            }
-                          }
-                        });
-                      },
-                    ),
-                  ],
-                ),
-                // Filter Akun
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      "Akun: ",
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    SizedBox(width: 5),
-                    DropdownButton<String>(
-                      value: _filterAkun,
-                      items: ["Semua", ...masterAkun].map((String val) {
-                        return DropdownMenuItem<String>(
-                          value: val,
-                          child: Text(val),
-                        );
-                      }).toList(),
-                      onChanged: (val) {
-                        setState(() {
-                          _filterAkun = val!;
-                        });
-                      },
-                    ),
-                  ],
-                ),
-                // Filter Kategori
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      "Kategori: ",
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    SizedBox(width: 5),
-                    DropdownButton<String>(
-                      value: _filterKategori,
-                      items: ["Semua", ...listKategoriFilter].map((String val) {
-                        return DropdownMenuItem<String>(
-                          value: val,
-                          child: Text(val),
-                        );
-                      }).toList(),
-                      onChanged: (val) {
-                        setState(() {
-                          _filterKategori = val!;
-                        });
-                      },
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            if (limitPengeluaran > 0 && pengeluaranBulanIni > limitPengeluaran) ...[
-              Container(
-                margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: BoxDecoration(
-                  color: Colors.red.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.redAccent.withValues(alpha: 0.4), width: 1.5),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.warning_amber_rounded, color: Colors.redAccent, size: 28),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            "Batas Pengeluaran Terlampaui!",
-                            style: TextStyle(
-                              color: Colors.redAccent,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            "Pengeluaran bulan ini (Rp ${formatRibuan(pengeluaranBulanIni)}) telah melebihi batas maksimal bulanan Anda (Rp ${formatRibuan(limitPengeluaran)}).",
-                            style: TextStyle(
-                              color: Colors.red[300],
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+              ),
+              TextButton(
+                onPressed: () async {
+                  DateTime? picked = await showDatePicker(
+                    context: context,
+                    initialDate: rangeSelesai,
+                    firstDate: DateTime(2020),
+                    lastDate: DateTime(2030),
+                  );
+                  if (picked != null) setState(() => rangeSelesai = picked);
+                },
+                child: Text(
+                  "Sampai: ${rangeSelesai.day}/${rangeSelesai.month}/${rangeSelesai.year}",
                 ),
               ),
             ],
-            const SizedBox(height: 10),
-            // RINGKASAN SALDO, PEMASUKAN, & PENGELUARAN
-            // RINGKASAN SALDO, PEMASUKAN, & PENGELUARAN
-            Card(
-              margin: const EdgeInsets.symmetric(vertical: 10),
-              elevation: 4,
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        Column(
-                          children: [
-                            const Text(
-                              "Pemasukan",
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              isHideSaldo
-                                  ? "Rp ••••••••"
-                                  : "Rp ${formatRibuan(totalPemasukan)}",
-                              style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.greenAccent,
-                              ),
-                            ),
-                          ],
-                        ),
-                        Container(
-                          width: 1,
-                          height: 30,
-                          color: Colors.grey.withValues(alpha: 0.3),
-                        ),
-                        Column(
-                          children: [
-                            const Text(
-                              "Pengeluaran",
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              isHideSaldo
-                                  ? "Rp ••••••••"
-                                  : "Rp ${formatRibuan(totalPengeluaran)}",
-                              style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.redAccent,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    const Divider(height: 20),
-
-                    // Saldo Bersih + Tombol Mata
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        IconButton(
-                          onPressed: () {
-                            setState(() {
-                              isHideSaldo = !isHideSaldo;
-                              isHideSaldoGlobal = isHideSaldo;
-                            });
-                            saveData();
-                          },
-                          icon: Icon(
-                            isHideSaldo
-                                ? Icons.visibility_off
-                                : Icons.visibility,
-                            size: 20,
-                          ),
-                        ),
-                        Text(
-                          isHideSaldo
-                              ? "Saldo Bersih: Rp ••••••••"
-                              : "Saldo Bersih: Rp ${formatRibuan(totalSaldo)}",
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: totalSaldo >= 0
-                                ? Colors.greenAccent
-                                : Colors.redAccent,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+          ),
+          // FILTER UTAMA (Tipe, Akun, Kategori)
+          Wrap(
+            spacing: 16,
+            runSpacing: 8,
+            alignment: WrapAlignment.center,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              // Filter Tipe
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text("Tipe: ", style: TextStyle(fontWeight: FontWeight.bold)),
+                  SizedBox(width: 5),
+                  DropdownButton<String>(
+                    value: _filterTipe,
+                    items: ["Semua", "Pengeluaran", "Pemasukan"].map((
+                      String val,
+                    ) {
+                      return DropdownMenuItem<String>(
+                        value: val,
+                        child: Text(val),
+                      );
+                    }).toList(),
+                    onChanged: (val) {
+                      setState(() {
+                        _filterTipe = val!;
+                        // Reset filter kategori jika tidak valid dengan tipe terpilih
+                        if (_filterTipe != "Semua") {
+                          final validCats = masterKategori
+                              .where((k) => k.tipe == _filterTipe)
+                              .map((k) => k.nama)
+                              .toSet();
+                          if (!validCats.contains(_filterKategori)) {
+                            _filterKategori = "Semua";
+                          }
+                        }
+                      });
+                    },
+                  ),
+                ],
+              ),
+              // Filter Akun
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text("Akun: ", style: TextStyle(fontWeight: FontWeight.bold)),
+                  SizedBox(width: 5),
+                  DropdownButton<String>(
+                    value: _filterAkun,
+                    items: ["Semua", ...masterAkun].map((String val) {
+                      return DropdownMenuItem<String>(
+                        value: val,
+                        child: Text(val),
+                      );
+                    }).toList(),
+                    onChanged: (val) {
+                      setState(() {
+                        _filterAkun = val!;
+                      });
+                    },
+                  ),
+                ],
+              ),
+              // Filter Kategori
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    "Kategori: ",
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(width: 5),
+                  DropdownButton<String>(
+                    value: _filterKategori,
+                    items: ["Semua", ...listKategoriFilter].map((String val) {
+                      return DropdownMenuItem<String>(
+                        value: val,
+                        child: Text(val),
+                      );
+                    }).toList(),
+                    onChanged: (val) {
+                      setState(() {
+                        _filterKategori = val!;
+                      });
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Center(
+            child: OutlinedButton.icon(
+              onPressed: () => _exportToExcel(riwayatTerfilter),
+              icon: const Icon(Icons.file_download, size: 18, color: Colors.green),
+              label: const Text(
+                "Ekspor Laporan Excel",
+                style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
+              ),
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: Colors.green, width: 1.5),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               ),
             ),
-            const SizedBox(height: 10),
-            SizedBox(height: 10),
-            // DAFTAR RIWAYAT DENGAN GRUP TANGGAL
-            ...transaksiPerTanggal.entries.map((entry) {
-              String tanggalHeader = entry.key;
-              List<Transaksi> listTransaksi = entry.value;
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+          ),
+          if (limitPengeluaran > 0 &&
+              pengeluaranBulanIni > limitPengeluaran) ...[
+            Container(
+              margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.red.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Colors.redAccent.withValues(alpha: 0.4),
+                  width: 1.5,
+                ),
+              ),
+              child: Row(
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.only(
-                      top: 16.0,
-                      bottom: 8.0,
-                      left: 8.0,
-                    ),
-                    child: Text(
-                      tanggalHeader,
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey[800],
-                      ),
+                  const Icon(
+                    Icons.warning_amber_rounded,
+                    color: Colors.redAccent,
+                    size: 28,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Batas Pengeluaran Terlampaui!",
+                          style: TextStyle(
+                            color: Colors.redAccent,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          "Pengeluaran bulan ini (Rp ${formatRibuan(pengeluaranBulanIni)}) telah melebihi batas maksimal bulanan Anda (Rp ${formatRibuan(limitPengeluaran)}).",
+                          style: TextStyle(
+                            color: Colors.red[300],
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  ...listTransaksi.map((item) {
-                    final categoryDetail = masterKategori.firstWhere(
-                      (k) => k.nama == item.kategori,
-                      orElse: () => KategoriModel(
-                        nama: item.kategori,
-                        tipe: item.tipe,
-                        ikon: Icons.category,
-                      ),
-                    );
-                    final isPengeluaran = item.tipe == "Pengeluaran";
-                    final color = isPengeluaran ? Colors.red : Colors.green;
-                    return ListTile(
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: 8.0,
-                        vertical: 4.0,
-                      ),
-                      onTap: () =>
-                          _showDetailTransaksi(item, categoryDetail.ikon),
-                      leading: Container(
-                        width: 48,
-                        height: 48,
-                        decoration: BoxDecoration(
-                          color: color.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Icon(
-                          categoryDetail.ikon,
-                          color: color,
-                          size: 24,
-                        ),
-                      ),
-                      title: Text(
-                        item.kategori,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
-                        ),
-                      ),
-                      subtitle: Text(
-                        item.catatan.isNotEmpty
-                            ? "${item.catatan} • ${item.akun}"
-                            : item.akun,
-                        style: TextStyle(color: Colors.grey[600], fontSize: 13),
-                      ),
-                      trailing: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.end,
+                ],
+              ),
+            ),
+          ],
+          const SizedBox(height: 10),
+          // RINGKASAN SALDO, PEMASUKAN, & PENGELUARAN
+          // RINGKASAN SALDO, PEMASUKAN, & PENGELUARAN
+          Card(
+            margin: const EdgeInsets.symmetric(vertical: 10),
+            elevation: 4,
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      Column(
                         children: [
-                          Text(
-                            "${isPengeluaran ? "-Rp. " : "+Rp. "}${formatRibuan(item.nominal)}",
-                            style: TextStyle(
-                              color: isPengeluaran
-                                  ? Colors.red[800]
-                                  : Colors.green[800],
-                              fontWeight: FontWeight.bold,
-                              fontSize: 15,
-                            ),
+                          const Text(
+                            "Pemasukan",
+                            style: TextStyle(fontSize: 12, color: Colors.grey),
                           ),
-                          SizedBox(height: 4),
+                          const SizedBox(height: 4),
                           Text(
-                            _formatWaktu(item.tanggal),
-                            style: TextStyle(
-                              color: Colors.grey[500],
-                              fontSize: 12,
+                            isHideSaldo
+                                ? "Rp ••••••••"
+                                : "Rp ${formatRibuan(totalPemasukan)}",
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.greenAccent,
                             ),
                           ),
                         ],
                       ),
-                    );
-                  }),
+                      Container(
+                        width: 1,
+                        height: 30,
+                        color: Colors.grey.withValues(alpha: 0.3),
+                      ),
+                      Column(
+                        children: [
+                          const Text(
+                            "Pengeluaran",
+                            style: TextStyle(fontSize: 12, color: Colors.grey),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            isHideSaldo
+                                ? "Rp ••••••••"
+                                : "Rp ${formatRibuan(totalPengeluaran)}",
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.redAccent,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const Divider(height: 20),
+
+                  // Saldo Bersih + Tombol Mata
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      IconButton(
+                        onPressed: () {
+                          setState(() {
+                            isHideSaldo = !isHideSaldo;
+                            isHideSaldoGlobal = isHideSaldo;
+                          });
+                          saveData();
+                        },
+                        icon: Icon(
+                          isHideSaldo ? Icons.visibility_off : Icons.visibility,
+                          size: 20,
+                        ),
+                      ),
+                      Text(
+                        isHideSaldo
+                            ? "Saldo Bersih: Rp ••••••••"
+                            : "Saldo Bersih: Rp ${formatRibuan(totalSaldo)}",
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: totalSaldo >= 0
+                              ? Colors.greenAccent
+                              : Colors.redAccent,
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
-              );
-            }),
-          ],
-        ),
-      );
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          SizedBox(height: 10),
+          // DAFTAR RIWAYAT DENGAN GRUP TANGGAL
+          ...transaksiPerTanggal.entries.map((entry) {
+            String tanggalHeader = entry.key;
+            List<Transaksi> listTransaksi = entry.value;
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(
+                    top: 16.0,
+                    bottom: 8.0,
+                    left: 8.0,
+                  ),
+                  child: Text(
+                    tanggalHeader,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey[800],
+                    ),
+                  ),
+                ),
+                ...listTransaksi.map((item) {
+                  final categoryDetail = masterKategori.firstWhere(
+                    (k) => k.nama == item.kategori,
+                    orElse: () => KategoriModel(
+                      nama: item.kategori,
+                      tipe: item.tipe,
+                      ikon: Icons.category,
+                    ),
+                  );
+                  final isPengeluaran = item.tipe == "Pengeluaran";
+                  final color = isPengeluaran ? Colors.red : Colors.green;
+                  return ListTile(
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 8.0,
+                      vertical: 4.0,
+                    ),
+                    onTap: () =>
+                        _showDetailTransaksi(item, categoryDetail.ikon),
+                    leading: Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: color.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Icon(categoryDetail.ikon, color: color, size: 24),
+                    ),
+                    title: Text(
+                      item.kategori,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
+                    ),
+                    subtitle: Text(
+                      item.catatan.isNotEmpty
+                          ? "${item.catatan} • ${item.akun}"
+                          : item.akun,
+                      style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                    ),
+                    trailing: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          "${isPengeluaran ? "-Rp. " : "+Rp. "}${formatRibuan(item.nominal)}",
+                          style: TextStyle(
+                            color: isPengeluaran
+                                ? Colors.red[800]
+                                : Colors.green[800],
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          _formatWaktu(item.tanggal),
+                          style: TextStyle(
+                            color: Colors.grey[500],
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+              ],
+            );
+          }),
+        ],
+      ),
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -2067,6 +2438,11 @@ class _HomeScreenState extends State<HomeScreen> {
         automaticallyImplyLeading: false,
         actions: _currentIndex == 0
             ? [
+                IconButton(
+                  icon: const Icon(Icons.file_download_outlined),
+                  tooltip: "Ekspor Excel",
+                  onPressed: () => _exportToExcel(riwayatTerfilter),
+                ),
                 IconButton(
                   icon: const Icon(Icons.settings_outlined),
                   tooltip: "Pengaturan",

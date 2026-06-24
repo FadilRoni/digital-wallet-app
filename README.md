@@ -11,18 +11,22 @@ Aplikasi manajemen keuangan pribadi berbasis Flutter yang dirancang dengan antar
 * **Format Mata Uang Rupiah**: Input otomatis diformat dengan pemisah ribuan (titik) menggunakan formatter khusus.
 * **Filter Dinamis**: Menyaring transaksi berdasarkan akun, kategori, tipe transaksi, dan rentang tanggal kustom.
 * **Pengelompokan Berdasarkan Tanggal**: Daftar transaksi diurutkan secara kronologis dan dikelompokkan per hari untuk kemudahan pemantauan.
+* **Transfer Antar Rekening (Pindah Dana)**: Kategori transaksi khusus untuk memindahkan saldo antar akun. Pencatatan pengeluaran pindah dana otomatis membuat transaksi pemasukan pasangannya di akun tujuan secara real-time.
 
 ### 2. Grafik & Analisis Keuangan
-* Visualisasi persentase pengeluaran per kategori menggunakan diagram lingkaran (pie chart) interaktif untuk mempermudah analisis alokasi dana.
+* **Pie Chart Pengeluaran**: Visualisasi persentase pengeluaran per kategori menggunakan diagram lingkaran (pie chart) interaktif untuk mempermudah analisis alokasi dana.
+* **Visualisasi Aset Terkini**: Grafik dan ringkasan aset yang disajikan berdasarkan harga pasar kripto real-time dari Indodax (via global cache) dengan pembulatan 2 digit di belakang koma untuk presisi tinggi.
 
 ### 3. Manajemen Kategori & Pengurutan Dinamis
 * **Drag-and-Drop Reordering**: Mengubah urutan kategori secara interaktif dengan menekan dan menggeser ikon pegangan (*drag handle*) di sebelah kiri ikon kategori.
 * **Sinkronisasi Otomatis**: Urutan kustom kategori langsung tercermin saat memilih kategori pada form tambah transaksi.
+* **Halaman Pengelolaan Khusus**: Pengelolaan kategori didelegasikan ke halaman khusus (`kategori_screen.dart`) yang bersih dan responsif.
 
 ### 4. Manajemen Akun/Dompet (Account Health)
-* **Saldo Awal**: Mendukung pengisian saldo awal saat membuat atau mengubah akun.
-* **Perhitungan Real-time**: Saldo akhir akun dihitung secara dinamis dari `Saldo Awal + Total Pemasukan - Total Pengeluaran`.
+* **Saldo Awal**: Mendukung pengisian saldo awal saat membuat atau mengubah akun dengan pemisah ribuan otomatis.
+* **Perhitungan Real-time**: Saldo akhir akun dihitung secara dinamis dari `Saldo Awal + Total Pemasukan - Total Pengeluaran` (mengecualikan transaksi `Pindah Dana` untuk akurasi saldo riil).
 * **Akun Utama (Autoselect)**: Kemampuan menetapkan salah satu akun sebagai akun utama. Akun ini otomatis terpilih ketika menambah transaksi atau hutang baru.
+* **Akun Default Cash Bank**: Migrasi otomatis dari nama akun lama (`Tunai`) menjadi `Cash Bank`.
 
 ### 5. Buku Kas Pembantu (Utang & Piutang)
 * **Manajemen Kontak Ledger**: Pencatatan saldo utang (kita meminjam uang) dan piutang (orang lain meminjam uang kita) per nama kontak.
@@ -35,8 +39,9 @@ Aplikasi manajemen keuangan pribadi berbasis Flutter yang dirancang dengan antar
 * **Privasi (Hide Balance)**: Fitur menyembunyikan saldo portofolio dengan penyimpanan status secara persisten menggunakan Hive.
 
 ### 7. Pengaturan & Keamanan Data (Settings & Backup)
+* **Halaman Pengaturan Sentral**: Menyediakan halaman khusus (`settings_screen.dart`) untuk mengatur seluruh konfigurasi aplikasi secara terpusat, seperti batas pengeluaran bulanan, privasi saldo, dan fitur ekspor/impor data.
 * **Batas Maksimal Pengeluaran (Warning Limit)**: Fitur menetapkan batas maksimal pengeluaran bulanan. Jika pengeluaran bulan berjalan melebihi batas, kartu peringatan (*warning card*) akan muncul di halaman utama.
-* **Backup & Restore JSON**: Fitur ekspor dan impor seluruh basis data aplikasi dalam format berkas JSON ke memori lokal telepon secara mandiri tanpa dependensi pihak ketiga.
+* **Backup & Restore JSON**: Fitur ekspor dan impor seluruh basis data aplikasi dalam format berkas JSON ke memori lokal telepon secara mandiri tanpa dependensi pihak ketiga, lengkap dengan deteksi file cadangan lintas folder package lama.
 
 ---
 
@@ -156,7 +161,25 @@ Jika aplikasi ini bermanfaat bagi Anda, dukung proyek ini dengan cara:
 
 ## 📝 Riwayat Perubahan (Changelog)
 
-### **Versi 2.0.2 (Terbaru)**
+### **Versi 2.1.0 (Terbaru)**
+* **Halaman Pengaturan Sentral (Settings Screen)**:
+  * Memindahkan konfigurasi batas pengeluaran bulanan, privasi sembunyikan saldo, serta ekspor/impor data cadangan (JSON) dari dialog/halaman utama ke halaman pengaturan (`SettingsScreen`) terdedikasi.
+  * Halaman Pengaturan kini dapat diakses secara merata dari menu navigasi atas (`AppBar`) di semua tab utama.
+* **Halaman Kategori Mandiri (Kategori Screen)**:
+  * Mengubah `kategori_screen.dart` menjadi halaman penuh yang memiliki `AppBar` dan `Scaffold` tersendiri guna meningkatkan kenyamanan pengelolaan kategori.
+
+### **Versi 2.0.4**
+* **Fitur Transfer Antar Rekening (Pindah Dana)**:
+  * Menambahkan kategori transaksi khusus `Pindah Dana` untuk melakukan pemindahan dana antar akun terdaftar.
+  * Pembuatan transaksi pengeluaran pindah dana otomatis memicu pembuatan transaksi pemasukan pasangannya di akun tujuan secara instan.
+* **Migrasi Akun Tunai ke Cash Bank**:
+  * Mengotomatisasi migrasi nama akun default `Tunai` menjadi `Cash Bank` pada master akun, saldo awal, dan riwayat transaksi yang tersimpan.
+* **Penyempurnaan Tampilan & Kalkulasi**:
+  * Menghapus baris ringkasan `Saldo Bersih` pada halaman utama/Dashboard, memfokuskan ringkasan pada total pemasukan dan pengeluaran berjalan (mengecualikan transaksi kategori `Pindah Dana`).
+  * Memperbarui visualisasi portofolio aset kripto di halaman Grafik (`GrafikScreen`) agar disajikan berdasarkan harga pasar terkini (real-time bid/ask dari Indodax via global cache) alih-alih harga beli awal, serta membulatkan nilai aset hingga 2 digit di belakang koma.
+  * Memperbaiki penanganan tampilan teks peringatan ketika tidak ada aset kripto yang terdaftar.
+
+### **Versi 2.0.2**
 * **Perhitungan Saldo Akun Real-time**:
   * Mengintegrasikan kalkulasi saldo secara dinamis yang menggabungkan `Saldo Awal` dengan seluruh riwayat transaksi masuk dan keluar secara real-time.
 * **Migrasi Data Lintas Package ID**:
